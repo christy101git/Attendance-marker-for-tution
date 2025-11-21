@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracker</title>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* INTERNAL CSS - No external dependencies */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --success-bg: #dcfce7;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--gray-50);
+            margin: 0;
+            padding: 20px;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 24px;
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 0;
+            color: #dbeafe;
+        }
+
+        /* Controls */
+        .controls {
+            padding: 24px;
+            background-color: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .controls { grid-template-columns: 1fr; }
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 4px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box; /* Fixes width issues */
+        }
+
+        /* Buttons */
+        .btn-group {
+            padding: 16px 24px;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid var(--gray-100);
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .btn-success {
+            background-color: var(--success-bg);
+            color: var(--success);
+            border-color: #bbf7d0;
+        }
+        .btn-success:hover { background-color: #bbf7d0; }
+        
+        .btn-danger {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            border-color: #fecaca;
+        }
+        .btn-danger:hover { background-color: #fecaca; }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            width: 100%;
+            justify-content: center;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+        }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+
+        /* Student List */
+        .student-list {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .student-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: white;
+        }
+        .student-card:hover {
+            background-color: var(--gray-50);
+        }
+        
+        /* Present State */
+        .student-card.present {
+            background-color: #eff6ff; /* Blue-50 */
+            border-color: #bfdbfe;
+        }
+        .student-card.present .status-badge {
+            background-color: var(--success-bg);
+            color: var(--success);
+        }
+        .student-card.present .roll-no {
+            background-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        /* Absent State */
+        .student-card.absent {
+            background-color: white;
+        }
+        .student-card.absent .status-badge {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+        }
+        .student-card.absent .roll-no {
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .roll-no {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .student-name {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 99px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 24px;
+            background-color: var(--gray-50);
+            border-top: 1px solid var(--gray-200);
+            position: sticky;
+            bottom: 0;
+        }
+        .summary-text {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+        .text-green { color: var(--success); font-weight: bold; }
+        .text-red { color: var(--danger); font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <i data-lucide="users"></i>
+                <h1>Class Attendance Marker</h1>
+            </div>
+            <p>Manage your 11 students efficiently.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="form-group">
+                <label><i data-lucide="calendar" style="width:16px"></i> Class Date</label>
+                <input type="date" id="dateInput" class="form-control">
+            </div>
+            <div class="form-group">
+                <label><i data-lucide="file-text" style="width:16px"></i> Topic / Subject</label>
+                <input type="text" id="topicInput" placeholder="e.g., Algebra Intro" class="form-control">
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="btn-group">
+            <button onclick="markAll(true)" class="btn btn-success">
+                <i data-lucide="check-circle" style="width:16px"></i> Mark All Present
+            </button>
+            <button onclick="markAll(false)" class="btn btn-danger">
+                <i data-lucide="x-circle" style="width:16px"></i> Mark All Absent
+            </button>
+        </div>
+
+        <!-- Student List -->
+        <div class="student-list" id="studentList">
+            <!-- JS will populate this -->
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="summary-text">
+                <span>Summary:</span>
+                <span>
+                    <span id="presentCount" class="text-green">0 Present</span>, 
+                    <span id="absentCount" class="text-red">0 Absent</span>
+                </span>
+            </div>
+            <button onclick="generateWordReport()" class="btn btn-primary">
+                <i data-lucide="download"></i> Download Word Report
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        const STUDENT_LIST = [
+            { id: 1, name: 'Akash' },
+            { id: 2, name: 'Aisha' },
+            { id: 3, name: 'Avandika' },
+            { id: 4, name: 'Gandhi' },
+            { id: 5, name: 'Gayatri' },
+            { id: 6, name: 'Lami' },
+            { id: 7, name: 'Mariya' },
+            { id: 8, name: 'Nadha' },
+            { id: 9, name: 'Nuhuman' },
+            { id: 10, name: 'Sravan' },
+            { id: 11, name: 'Devika' },
+        ];
+
+        let attendance = {}; 
+        let date = new Date().toISOString().split('T')[0];
+        let topic = '';
+
+        document.getElementById('dateInput').value = date;
+        document.getElementById('dateInput').addEventListener('change', (e) => date = e.target.value);
+        document.getElementById('topicInput').addEventListener('input', (e) => topic = e.target.value);
+
+        function render() {
+            const container = document.getElementById('studentList');
+            container.innerHTML = '';
+
+            let present = 0;
+            let absent = 0;
+
+            STUDENT_LIST.forEach(student => {
+                const isPresent = !!attendance[student.id];
+                if (isPresent) present++; else absent++;
+
+                const div = document.createElement('div');
+                div.className = `student-card ${isPresent ? 'present' : 'absent'}`;
+                div.onclick = () => toggleAttendance(student.id);
+
+                div.innerHTML = `
+                    <div class="student-info">
+                        <span class="roll-no">${student.id}</span>
+                        <span class="student-name">${student.name}</span>
+                    </div>
+                    <div class="status-badge">
+                        ${isPresent 
+                            ? '<i data-lucide="check" style="width:16px"></i> Present' 
+                            : '<i data-lucide="x" style="width:16px"></i> Absent'}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('presentCount').innerText = `${present} Present`;
+            document.getElementById('absentCount').innerText = `${absent} Absent`;
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function toggleAttendance(id) {
+            attendance[id] = !attendance[id];
+            render();
+        }
+
+        function markAll(status) {
+            STUDENT_LIST.forEach(s => attendance[s.id] = status);
+            render();
+        }
+
+        function generateWordReport() {
+            const presentCount = Object.values(attendance).filter(Boolean).length;
+            const total = STUDENT_LIST.length;
+            const absentCount = total - presentCount;
+
+            const reportContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Attendance Report</title>
+                    <style>
+                        body { font-family: 'Calibri', sans-serif; }
+                        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .header { margin-bottom: 20px; }
+                        .present { color: green; font-weight: bold; }
+                        .absent { color: red; font-weight: bold; }
+                        .summary { margin-top: 20px; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>Class Attendance Report</h2>
+                        <p><strong>Date:</strong> ${date}</p>
+                        <p><strong>Topic/Subject:</strong> ${topic || 'N/A'}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">Roll No</th>
+                                <th style="width: 50%;">Student Name</th>
+                                <th style="width: 40%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${STUDENT_LIST.map(student => `
+                                <tr>
+                                    <td>${student.id}</td>
+                                    <td>${student.name}</td>
+                                    <td class="${attendance[student.id] ? 'present' : 'absent'}">
+                                        ${attendance[student.id] ? 'PRESENT' : 'ABSENT'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="summary">
+                        <h3>Summary</h3>
+                        <p>Total Students: ${total}</p>
+                        <p>Present: ${presentCount}</p>
+                        <p>Absent: ${absentCount}</p>
+                    </div>
+                <\/body>
+                <\/html>
+            `;
+
+            const blob = new Blob(['\ufeff', reportContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Attendance_${date}.doc`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        render();
+        if (window.lucide) lucide.createIcons();
+    </script>
+</body>
+</html>
